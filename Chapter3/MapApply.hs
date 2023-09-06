@@ -5,7 +5,7 @@ mapApply toApply =
   concatMap (\input -> map ($ input) toApply)
 
 example :: [Int] -> String
-example = mapApply undefined
+example = map lookupLetter . mapApply offsets
   where
     letters :: [Char]
     letters = ['a' .. 'z']
