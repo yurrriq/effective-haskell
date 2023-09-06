@@ -1,4 +1,5 @@
 :def pf \str -> return $ ":! pointfree \"" ++ str ++ "\""
+:set +s
 :set -haddock
 :set -w
 :set prompt "λ"
