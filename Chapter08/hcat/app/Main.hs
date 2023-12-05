@@ -1,4 +1,6 @@
 module Main where
 
+import HCat (runHCat)
+
 main :: IO ()
-main = putStrLn "Hello, Haskell!"
+main = HCat.runHCat
