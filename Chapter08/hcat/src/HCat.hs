@@ -6,6 +6,7 @@ module HCat where
 
 import qualified Control.Exception as Exception
 import Data.Text (Text)
+import qualified Data.Text as Text
 import qualified Data.Text.IO as TextIO
 import qualified System.Environment as Env
 import qualified System.IO.Error as IOError
@@ -32,3 +33,10 @@ handleArgs = parseArgs <$> Env.getArgs
 
 eitherToError :: (Show a) => Either a b -> IO b
 eitherToError = either (Exception.throwIO . IOError.userError . show) return
+
+wordWrap :: Int -> Text -> [Text]
+wordWrap lineLength lineText
+  | Text.length lineText <= lineLength = [lineText]
+  | otherwise =
+      let (wrapped, unwrapped) = Text.splitAt lineLength lineText
+       in wrapped : wordWrap lineLength unwrapped
