@@ -38,5 +38,13 @@ wordWrap :: Int -> Text -> [Text]
 wordWrap lineLength lineText
   | Text.length lineText <= lineLength = [lineText]
   | otherwise =
-      let (wrapped, unwrapped) = Text.splitAt lineLength lineText
-       in wrapped : wordWrap lineLength unwrapped
+      let (candidate, nextLines) = Text.splitAt lineLength lineText
+          (firstLine, overflow) = softWrap candidate (Text.length candidate - 1)
+       in firstLine : wordWrap lineLength (overflow <> nextLines)
+  where
+    softWrap hardWrappedText textIndex
+      | textIndex <= 0 = (hardWrappedText, Text.empty)
+      | Text.index hardWrappedText textIndex == ' ' =
+          let (wrappedLine, rest) = Text.splitAt textIndex hardWrappedText
+           in (wrappedLine, Text.tail rest)
+      | otherwise = softWrap hardWrappedText (textIndex - 1)
