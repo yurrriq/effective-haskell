@@ -4,12 +4,19 @@
 
 module HCat where
 
+import Control.Arrow (second, (>>>))
 import qualified Control.Exception as Exception
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as TextIO
 import qualified System.Environment as Env
 import qualified System.IO.Error as IOError
+
+data ScreenDimensions = ScreenDimensions
+  { screenRows :: Int,
+    screenColumns :: Int
+  }
+  deriving (Show)
 
 runHCat :: IO ()
 runHCat =
@@ -22,6 +29,13 @@ runHCat =
     withErrorHandling =
       Exception.handle $ \err ->
         TextIO.putStrLn "I ran into an error:" >> print @IOError err
+
+paginate :: ScreenDimensions -> Text -> [Text]
+paginate (ScreenDimensions rows cols) text =
+  let unwrappedLines = Text.lines text
+      wrappedLines = concatMap (wordWrap cols) unwrappedLines
+      pageLines = groupsOf rows wrappedLines
+   in Text.unlines <$> pageLines
 
 handleArgs :: IO (Either Text FilePath)
 handleArgs = parseArgs <$> Env.getArgs
@@ -48,3 +62,6 @@ wordWrap lineLength lineText
           let (wrappedLine, rest) = Text.splitAt textIndex hardWrappedText
            in (wrappedLine, Text.tail rest)
       | otherwise = softWrap hardWrappedText (textIndex - 1)
+
+groupsOf :: Int -> [a] -> [[a]]
+groupsOf n = splitAt n >>> second (groupsOf n) >>> uncurry (:)
