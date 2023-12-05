@@ -1,9 +1,12 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeApplications #-}
 
 module HCat where
 
 import qualified Control.Exception as Exception
+import Data.Text (Text)
+import qualified Data.Text.IO as TextIO
 import qualified System.Environment as Env
 import qualified System.IO.Error as IOError
 
@@ -12,14 +15,14 @@ runHCat =
   withErrorHandling $
     handleArgs
       >>= eitherToError
-      >>= readFile
-      >>= putStrLn
+      >>= TextIO.readFile
+      >>= TextIO.putStrLn
   where
     withErrorHandling =
       Exception.handle $ \err ->
-        putStrLn "I ran into an error:" >> print @IOError err
+        TextIO.putStrLn "I ran into an error:" >> print @IOError err
 
-handleArgs :: IO (Either String FilePath)
+handleArgs :: IO (Either Text FilePath)
 handleArgs = parseArgs <$> Env.getArgs
   where
     parseArgs = \case
