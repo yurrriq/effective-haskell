@@ -5,12 +5,12 @@ module HCat where
 import qualified System.Environment as Env
 
 runHCat :: IO ()
-runHCat = handleArgs >>= displayMessage
-  where
-    displayMessage = \case
-      Left err -> putStrLn $ "Error: " <> err
-      Right fname ->
-        putStrLn $ "Opening file: " <> fname
+runHCat =
+  handleArgs >>= \case
+    Left err ->
+      putStrLn $ "Error processing: " <> err
+    Right fname ->
+      readFile fname >>= putStrLn
 
 handleArgs :: IO (Either String FilePath)
 handleArgs = parseArgs <$> Env.getArgs
