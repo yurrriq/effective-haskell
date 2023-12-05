@@ -33,13 +33,14 @@
       imports = [
         inputs.pre-commit-hooks.flakeModule
         inputs.treefmt-nix.flakeModule
+        ./Chapter08/hcat/flake-module.nix
       ];
 
       systems = [
         "x86_64-linux"
       ];
 
-      perSystem = { config, pkgs, system, ... }: {
+      perSystem = { config, pkgs, self', system, ... }: {
         _module.args.pkgs = import nixpkgs {
           overlays = [
             inputs.emacs-overlay.overlay
@@ -47,33 +48,45 @@
           inherit system;
         };
 
-        devShells.default = with pkgs; mkShell {
-          FONTCONFIG_FILE = makeFontsConf {
-            fontDirectories = [
-              (nerdfonts.override { fonts = [ "Iosevka" ]; })
+        devShells = {
+          default = pkgs.mkShell {
+            inherit (self'.devShells.haskell) FONTCONFIG_FILE;
+
+            inputsFrom = [
+              self'.devShells.haskell
             ];
           };
 
-          nativeBuildInputs = [
-            (
-              emacsWithPackagesFromUsePackage {
-                alwaysEnsure = true;
-                config = ./emacs.el;
-              }
-            )
-            cabal-install
-            ghc
-            ghcid
-            haskell-language-server
-            rnix-lsp
-          ] ++ (with haskellPackages; [
-            hpack
-            hlint
-            ormolu
-            pointfree
-          ]);
+          haskell = with pkgs; mkShell {
+            FONTCONFIG_FILE = makeFontsConf {
+              fontDirectories = [
+                (nerdfonts.override { fonts = [ "Iosevka" ]; })
+              ];
+            };
 
-          inherit (config.pre-commit.devShell) shellHook;
+            inputsFrom = [
+              config.pre-commit.devShell
+            ];
+
+            nativeBuildInputs = [
+              (
+                emacsWithPackagesFromUsePackage {
+                  alwaysEnsure = true;
+                  config = ./emacs.el;
+                }
+              )
+              cabal-install
+              ghc
+              ghcid
+              haskell-language-server
+              rnix-lsp
+            ] ++ (with haskellPackages; [
+              hpack
+              hlint
+              ormolu
+              pointfree
+            ]);
+          };
         };
 
         pre-commit.settings.hooks = {

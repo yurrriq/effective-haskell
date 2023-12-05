@@ -18,7 +18,7 @@
 (global-set-key (kbd "C-x C-k") 'kill-this-buffer)
 (global-set-key (kbd "s-u") 'revert-buffer)
 
-(set-face-attribute 'default nil :family "Iosevka Nerd Font" :height 110)
+(set-face-attribute 'default nil :family "Iosevka Nerd Font Mono" :height 110)
 
 (eval-when-compile
   (require 'use-package))
@@ -80,10 +80,11 @@
 
 (use-package lsp-haskell)
 
-(use-package magit
-  :bind
-  (("C-x g" . magit-status)
-   ("C-x C-g" . magit-status)))
+;; FIXME: wtf seq
+;; (use-package magit
+;;   :bind
+;;   (("C-x g" . magit-status)
+;;    ("C-x C-g" . magit-status)))
 
 (use-package multiple-cursors
   :demand

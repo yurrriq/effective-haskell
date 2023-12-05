@@ -1,0 +1,29 @@
+name: hcat
+version: 0.0.1.0
+author: Eric Bailey
+github: yurrriq/effective-haskell
+
+language: Haskell2010
+
+dependencies:
+  - base
+
+ghc-options:
+  - -Wall
+  - -Werror
+  - -fwarn-incomplete-patterns
+
+library:
+  source-dirs: src
+  dependencies:
+    - bytestring
+    - directory
+    - process
+    - text
+    - time
+
+executable:
+  source-dirs: app
+  main: Main.hs
+  dependencies:
+    - hcat
