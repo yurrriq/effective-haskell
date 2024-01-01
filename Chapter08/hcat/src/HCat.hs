@@ -4,7 +4,7 @@
 
 module HCat where
 
-import Control.Arrow (second, (>>>))
+import Control.Arrow (second)
 import qualified Control.Exception as Exception
 import qualified Data.ByteString as BS
 import Data.Text (Text)
@@ -111,4 +111,5 @@ wordWrap lineLength lineText
       | otherwise = softWrap hardWrappedText (textIndex - 1)
 
 groupsOf :: Int -> [a] -> [[a]]
-groupsOf n = splitAt n >>> second (groupsOf n) >>> uncurry (:)
+groupsOf _ [] = []
+groupsOf n elems = uncurry (:) $ second (groupsOf n) $ splitAt n elems
