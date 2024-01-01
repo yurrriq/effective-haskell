@@ -8,7 +8,9 @@ module HCat.Paginate
 where
 
 import Control.Arrow (second)
+import qualified Control.Exception as Exception
 import qualified Data.ByteString as BS
+import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as TextIO
@@ -16,6 +18,8 @@ import HCat.FileInfo
 import System.IO
 import qualified System.Info as SystemInfo
 import System.Process (readProcess)
+import Text.Read (readMaybe)
+import Prelude hiding (lines)
 
 data ContinueCancel
   = Continue
@@ -45,8 +49,15 @@ getTerminalSize =
     "linux" -> tputScreenDimensions
     _other -> pure (ScreenDimensions 25 80)
   where
-    tputScreenDimensions = ScreenDimensions <$> tput ["lines"] <*> tput ["cols"]
-    tput = fmap (read . init) . flip (readProcess "tput") ""
+    tputScreenDimensions =
+      ScreenDimensions
+        <$> (fromMaybe 25 <$> tput ["lines"])
+        <*> (fromMaybe 80 <$> tput ["cols"])
+    tput args =
+      Exception.handle ope $
+        readMaybe . init <$> readProcess "tput" args ""
+    ope :: IOError -> IO (Maybe Int)
+    ope = const (pure Nothing)
 
 paginate :: ScreenDimensions -> FileInfo -> Text -> [Text]
 paginate (ScreenDimensions rows cols) finfo text =
