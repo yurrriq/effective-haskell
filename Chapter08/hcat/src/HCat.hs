@@ -116,10 +116,10 @@ fileInfo path =
 showPages :: [Text] -> IO ()
 showPages [] = return ()
 showPages (page : pages) =
-  clearScreen
-    >> TextIO.putStrLn page
-    >> getContinue
-    >>= \case
+  do
+    clearScreen
+    TextIO.putStrLn page
+    getContinue >>= \case
       Continue -> showPages pages
       Cancel -> return ()
 
@@ -129,10 +129,10 @@ clearScreen =
 
 getContinue :: IO ContinueCancel
 getContinue =
-  hSetBuffering stdin NoBuffering
-    >> hSetEcho stdin False
-    >> getChar
-    >>= \case
+  do
+    hSetBuffering stdin NoBuffering
+    hSetEcho stdin False
+    getChar >>= \case
       ' ' -> return Continue
       'q' -> return Cancel
       _ -> getContinue
