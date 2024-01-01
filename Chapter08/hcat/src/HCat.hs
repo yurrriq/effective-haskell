@@ -6,11 +6,15 @@ module HCat where
 
 import Control.Arrow (second, (>>>))
 import qualified Control.Exception as Exception
+import qualified Data.ByteString as BS
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as TextIO
 import qualified System.Environment as Env
+import System.IO
 import qualified System.IO.Error as IOError
+import qualified System.Info as SystemInfo
+import System.Process (readProcess)
 
 data ScreenDimensions = ScreenDimensions
   { screenRows :: Int,
@@ -18,24 +22,26 @@ data ScreenDimensions = ScreenDimensions
   }
   deriving (Show)
 
+data ContinueCancel
+  = Continue
+  | Cancel
+  deriving (Eq, Show)
+
 runHCat :: IO ()
 runHCat =
   withErrorHandling $
     handleArgs
       >>= eitherToError
-      >>= TextIO.readFile
-      >>= TextIO.putStrLn
+      >>= flip openFile ReadMode
+      >>= TextIO.hGetContents
+      >>= \contents ->
+        getTerminalSize >>= \termSize ->
+          let pages = paginate termSize contents
+           in showPages pages
   where
     withErrorHandling =
       Exception.handle $ \err ->
         TextIO.putStrLn "I ran into an error:" >> print @IOError err
-
-paginate :: ScreenDimensions -> Text -> [Text]
-paginate (ScreenDimensions rows cols) text =
-  let unwrappedLines = Text.lines text
-      wrappedLines = concatMap (wordWrap cols) unwrappedLines
-      pageLines = groupsOf rows wrappedLines
-   in Text.unlines <$> pageLines
 
 handleArgs :: IO (Either Text FilePath)
 handleArgs = parseArgs <$> Env.getArgs
@@ -44,6 +50,47 @@ handleArgs = parseArgs <$> Env.getArgs
       [fname] -> Right fname
       [] -> Left "no filename provided"
       _ -> Left "multiple files not supported"
+
+showPages :: [Text] -> IO ()
+showPages [] = return ()
+showPages (page : pages) =
+  clearScreen
+    >> TextIO.putStrLn page
+    >> getContinue
+    >>= \case
+      Continue -> showPages pages
+      Cancel -> return ()
+
+clearScreen :: IO ()
+clearScreen =
+  BS.putStr "\^[[1J\^[[1;1H"
+
+getContinue :: IO ContinueCancel
+getContinue =
+  hSetBuffering stdin NoBuffering
+    >> hSetEcho stdin False
+    >> getChar
+    >>= \case
+      ' ' -> return Continue
+      'q' -> return Cancel
+      _ -> getContinue
+
+paginate :: ScreenDimensions -> Text -> [Text]
+paginate (ScreenDimensions rows cols) text =
+  let unwrappedLines = Text.lines text
+      wrappedLines = concatMap (wordWrap cols) unwrappedLines
+      pageLines = groupsOf rows wrappedLines
+   in Text.unlines <$> pageLines
+
+getTerminalSize :: IO ScreenDimensions
+getTerminalSize =
+  case SystemInfo.os of
+    "darwin" -> tputScreenDimensions
+    "linux" -> tputScreenDimensions
+    _other -> pure (ScreenDimensions 25 80)
+  where
+    tputScreenDimensions = ScreenDimensions <$> tput ["lines"] <*> tput ["cols"]
+    tput = fmap (read . init) . flip (readProcess "tput") ""
 
 eitherToError :: (Show a) => Either a b -> IO b
 eitherToError = either (Exception.throwIO . IOError.userError . show) return
