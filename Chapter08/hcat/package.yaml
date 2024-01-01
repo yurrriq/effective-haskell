@@ -1,9 +1,12 @@
 name: hcat
-version: 0.0.3.0
+version: 0.1.0.0
 author: Eric Bailey
 github: yurrriq/effective-haskell
 
 language: Haskell2010
+
+default-extensions:
+  - OverloadedStrings
 
 dependencies:
   - base
