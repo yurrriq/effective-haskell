@@ -34,6 +34,7 @@
         inputs.pre-commit-hooks.flakeModule
         inputs.treefmt-nix.flakeModule
         ./Chapter08/hcat/flake-module.nix
+        ./Chapter13/har/flake-module.nix
       ];
 
       systems = [

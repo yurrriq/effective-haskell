@@ -1,0 +1,35 @@
+name: har
+version: 0.1.0.0
+author: Eric Bailey
+github: yurrriq/effective-haskell
+
+data-files:
+  - data/*.txt
+
+language: Haskell2010
+
+default-extensions:
+  - OverloadedStrings
+
+dependencies:
+  - base
+
+ghc-options:
+  - -Wall
+  - -Werror
+  - -fwarn-incomplete-patterns
+
+library:
+  source-dirs: src
+  dependencies:
+    - bytestring
+    - mtl
+    - text
+
+executable:
+  source-dirs: app
+  main: Main.hs
+  dependencies:
+    - har
+  other-modules:
+    - Paths_har
